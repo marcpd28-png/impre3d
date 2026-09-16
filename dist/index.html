@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#090b0d" />
+  <meta name="description" content="Convierte una idea en una pieza 3D lista para imprimir, configurar y pagar." />
+  <title>Impre3D — De idea a objeto</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23090b0d'/%3E%3Cpath d='M18 18h28v8H18zm8 12h12v8H26zm-7 13 13-7 13 7v5L32 55l-13-7z' fill='%23ff5a1f'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Impre3D inicio"><span class="brand-cube">◆</span> IMPRE<span>3D</span></a>
+    <div class="stepper" aria-label="Progreso">
+      <button class="step active" data-step="1"><b>01</b><span>Crear</span></button><i></i>
+      <button class="step" data-step="2"><b>02</b><span>Configurar</span></button><i></i>
+      <button class="step" data-step="3"><b>03</b><span>Imprimir</span></button>
+    </div>
+    <button class="icon-btn" id="soundToggle" aria-label="Activar o silenciar sonido">◉</button>
+  </header>
+
+  <main>
+    <section class="machine" aria-label="Vista previa de la impresora 3D">
+      <div class="machine-glow"></div>
+      <div class="rail rail-left"></div><div class="rail rail-right"></div>
+      <div class="gantry"><span></span><div class="print-head"><i></i><em></em></div></div>
+      <div class="scene" id="scene" role="img" aria-label="Modelo 3D interactivo">
+        <div class="model-wrap" id="modelWrap">
+          <div class="model" id="model">
+            <div class="face front"><span id="modelText">M</span></div><div class="face back"></div>
+            <div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div>
+          </div>
+          <div class="measure measure-w"><span id="widthLabel">120 mm</span></div>
+          <div class="measure measure-h"><span id="heightLabel">80 mm</span></div>
+        </div>
+        <div class="print-line" id="printLine"></div>
+        <div class="bed"><div class="bed-grid"></div><span>IMPRE3D / BUILD PLATE</span></div>
+      </div>
+      <div class="camera-hint">ARRASTRA PARA ROTAR · SCROLL PARA ACERCAR</div>
+      <div class="status-chip"><i></i><span id="statusText">SISTEMA LISTO</span></div>
+    </section>
+
+    <aside class="panel">
+      <section class="panel-step active" data-panel="1">
+        <div class="eyebrow">PASO 01 / 03</div>
+        <h1>¿Qué quieres<br><span>hacer real?</span></h1>
+        <p class="intro">Descríbelo con tus palabras o sube una referencia. Nosotros nos encargamos de hacerlo imprimible.</p>
+        <label class="prompt-box">
+          <textarea id="prompt" rows="4" placeholder="Ej. Un soporte minimalista para mi iPhone con la letra M..."></textarea>
+          <div><button class="round" id="micBtn" type="button" aria-label="Dictar descripción">⌁</button><span id="counter">0 / 240</span></div>
+        </label>
+        <div class="or"><span></span>O SUBE TU ARCHIVO<span></span></div>
+        <label class="upload" id="dropzone">
+          <input id="fileInput" type="file" accept=".stl,.obj,.glb,.gltf,.3mf,image/*" />
+          <span class="upload-icon">↥</span><b>Arrastra tu archivo aquí</b><small>STL, OBJ, GLB, 3MF o imagen · Máx. 50 MB</small>
+        </label>
+        <button class="primary" id="generateBtn">GENERAR MODELO <span>→</span></button>
+        <p class="fine">La generación de esta demo es una simulación visual.</p>
+      </section>
+
+      <section class="panel-step" data-panel="2">
+        <div class="eyebrow">PASO 02 / 03</div>
+        <h2>Hazlo exactamente <span>tuyo.</span></h2>
+        <div class="control-group"><label>MEDIDAS</label><div class="dimensions">
+          <label>Ancho <input id="width" type="number" value="120" min="20" max="300"><small>mm</small></label>
+          <label>Alto <input id="height" type="number" value="80" min="20" max="300"><small>mm</small></label>
+          <label>Fondo <input id="depth" type="number" value="45" min="10" max="200"><small>mm</small></label>
+        </div></div>
+        <div class="control-group"><label>MATERIAL</label><div class="segmented"><button class="active" data-material="PLA">PLA</button><button data-material="PETG">PETG</button><button data-material="Resina">Resina</button></div></div>
+        <div class="control-group"><label>COLOR</label><div class="swatches"><button class="active" style="--c:#f05a28" data-color="#f05a28" aria-label="Naranja"></button><button style="--c:#e8e6df" data-color="#e8e6df" aria-label="Marfil"></button><button style="--c:#18191b" data-color="#18191b" aria-label="Negro"></button><button style="--c:#4b72ff" data-color="#4b72ff" aria-label="Azul"></button><button style="--c:#d4af37" data-color="#d4af37" aria-label="Dorado"></button></div></div>
+        <div class="control-group"><label>ACABADO</label><input id="finish" type="range" min="0" max="2" value="1"><div class="range-labels"><span>Rápido</span><span>Equilibrado</span><span>Máximo detalle</span></div></div>
+        <div class="viability"><span>✓</span><div><b>Listo para imprimir</b><small>Paredes y proporciones verificadas</small></div></div>
+        <div class="price-row"><div><small>PRECIO ESTIMADO</small><strong id="price">S/ 42.90</strong></div><div><small>TIEMPO</small><strong id="time">3 h 20 min</strong></div></div>
+        <button class="primary" id="checkoutBtn">CONTINUAR AL PAGO <span>→</span></button>
+        <button class="back" data-back="1">← Volver a crear</button>
+      </section>
+
+      <section class="panel-step" data-panel="3">
+        <div class="eyebrow">PASO 03 / 03</div>
+        <h2>Todo listo para <span>imprimir.</span></h2>
+        <div class="order-card"><div class="thumb"><div></div></div><div><b id="orderName">Tu creación 3D</b><small id="orderSpec">PLA · 120 × 80 × 45 mm</small></div><strong id="orderPrice">S/ 42.90</strong></div>
+        <div class="delivery"><span>⌂</span><label>ENTREGA EN LIMA<input id="address" placeholder="Ingresa tu dirección" /></label></div>
+        <div class="payment">
+          <div class="yape-head"><span class="yape-logo">Y</span><div><b>Paga con Yape</b><small>Escanea el código desde tu app</small></div></div>
+          <div class="qr" aria-label="Código QR demostrativo"><div class="qr-grid" id="qrGrid"></div><span>DEMO</span></div>
+          <strong id="payAmount">S/ 42.90</strong>
+          <small>Este QR es demostrativo y no procesa pagos reales.</small>
+        </div>
+        <button class="primary yape" id="confirmBtn">SIMULAR PAGO CON YAPE <span>→</span></button>
+        <button class="back" data-back="2">← Editar configuración</button>
+      </section>
+
+      <section class="panel-step success" data-panel="4">
+        <div class="success-mark">✓</div><div class="eyebrow">PEDIDO CONFIRMADO</div>
+        <h2>Tu idea ya está<br><span>tomando forma.</span></h2>
+        <p>Hemos preparado tu orden de demostración. En una versión productiva, aquí comenzaría la revisión técnica antes de fabricar.</p>
+        <div class="ticket"><small>NÚMERO DE PEDIDO</small><strong>IMP-260916</strong><span>Entrega estimada · 19 Sep</span></div>
+        <button class="primary" id="restartBtn">CREAR OTRA PIEZA <span>↻</span></button>
+      </section>
+    </aside>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
