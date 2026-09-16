@@ -1,5 +1,5 @@
 const $=(s,p=document)=>p.querySelector(s), $$=(s,p=document)=>[...p.querySelectorAll(s)];
-const state={step:1,price:42.9,material:'PLA',color:'#f05a28',rotation:{x:-14,y:32},zoom:1};
+const state={step:1,price:42.9,material:'PLA',color:'#f05a28',rotation:{x:-14,y:32},zoom:1,pendingImage:null,imageName:null};
 const scene=$('#scene'), model=$('#model'), machine=$('.machine');
 
 function showStep(n){
@@ -11,9 +11,19 @@ function showStep(n){
 $('#prompt').addEventListener('input',e=>{$('#counter').textContent=`${e.target.value.length} / 240`; if(e.target.value.length>240)e.target.value=e.target.value.slice(0,240)});
 $('#generateBtn').addEventListener('click',()=>{
   const btn=$('#generateBtn'), prompt=$('#prompt').value.trim();
+  if(!prompt && !state.pendingImage){$('#prompt').focus();$('#prompt').placeholder='Describe una pieza o sube una imagen primero';return}
   btn.disabled=true; btn.firstChild.textContent='GENERANDO '; $('#statusText').textContent='M1 / PREPARANDO CÁMARA'; $('#nozzleTemp').textContent='220°C'; $('#bedTemp').textContent='60°C'; $('#chamberTemp').textContent='34°C'; machine.classList.add('printing');
   if(prompt){const words=prompt.split(/\s+/); $('#orderName').textContent=words.slice(0,5).join(' '); $('#modelText').textContent=(words.find(w=>w.length>2)||'M')[0].toUpperCase()}
-  setTimeout(()=>{$('#statusText').textContent='M1 / MODELO LISTO';btn.disabled=false;btn.firstChild.textContent='GENERAR MODELO ';machine.classList.remove('printing');showStep(2)},2850);
+  setTimeout(()=>{
+    if(state.pendingImage){
+      $('#imageRelief').style.backgroundImage=`url("${state.pendingImage}")`; model.classList.add('image-mode');
+      state.rotation={x:-5,y:18};state.zoom=1.22;renderModel();
+      $('#orderName').textContent=(state.imageName||'Modelo desde imagen').replace(/\.[^.]+$/,'');
+      $('#viabilityTitle').textContent='Vista 3D generada';$('#viabilityDetail').textContent='Pendiente de convertir a malla imprimible';
+      $('#statusText').textContent='M1 / MODELO 3D GENERADO';
+    } else { model.classList.remove('image-mode');$('#viabilityTitle').textContent='Listo para imprimir';$('#viabilityDetail').textContent='Paredes y proporciones verificadas';$('#statusText').textContent='M1 / MODELO LISTO'; }
+    btn.disabled=false;btn.firstChild.textContent='GENERAR MODELO ';machine.classList.remove('printing');showStep(2)
+  },2850);
 });
 
 function applyReference(file){
@@ -22,13 +32,13 @@ function applyReference(file){
   $('#counter').textContent=`${$('#prompt').value.length} / 240`;
   $('#uploadName').textContent=file.name; $('#uploadPreview').classList.add('visible'); $('#dropzone').classList.add('has-image');
   if(file.type.startsWith('image/')){
-    const reader=new FileReader(); reader.onload=()=>{const url=reader.result;$('#uploadThumb').src=url;$('#imageRelief').style.backgroundImage=`url("${url}")`;model.classList.add('image-mode');$('#statusText').textContent='M1 / TEXTURA CARGADA'}; reader.readAsDataURL(file);
+    const reader=new FileReader(); reader.onload=()=>{const url=reader.result;state.pendingImage=url;state.imageName=file.name;$('#uploadThumb').src=url;model.classList.remove('image-mode');$('#statusText').textContent='M1 / IMAGEN LISTA PARA GENERAR'}; reader.readAsDataURL(file);
   } else { $('#uploadThumb').removeAttribute('src'); $('#modelText').textContent='3D'; model.classList.remove('image-mode'); }
 }
 $('#fileInput').addEventListener('change',e=>applyReference(e.target.files[0]));
 ['dragenter','dragover'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.add('drag')}));
 ['dragleave','drop'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.remove('drag');if(ev==='drop'&&e.dataTransfer.files[0])applyReference(e.dataTransfer.files[0])}));
-$('#removeImage').addEventListener('click',()=>{$('#fileInput').value='';$('#uploadPreview').classList.remove('visible');$('#dropzone').classList.remove('has-image');$('#imageRelief').style.backgroundImage='';model.classList.remove('image-mode');$('#prompt').value='';$('#counter').textContent='0 / 240';$('#statusText').textContent='M1 LISTA'});
+$('#removeImage').addEventListener('click',()=>{$('#fileInput').value='';state.pendingImage=null;state.imageName=null;$('#uploadPreview').classList.remove('visible');$('#dropzone').classList.remove('has-image');$('#imageRelief').style.backgroundImage='';model.classList.remove('image-mode');$('#prompt').value='';$('#counter').textContent='0 / 240';$('#statusText').textContent='M1 LISTA'});
 
 function updateQuote(){
   const w=+$('#width').value||120,h=+$('#height').value||80,d=+$('#depth').value||45, finish=+$('#finish').value;
