@@ -67,8 +67,8 @@
         </label>
         <div class="or"><span></span>O SUBE TU ARCHIVO<span></span></div>
         <label class="upload" id="dropzone">
-          <input id="fileInput" type="file" accept=".stl,.obj,.glb,.gltf,.3mf,image/*" />
-          <span class="upload-icon">↥</span><b>Arrastra tu archivo aquí</b><small>STL, OBJ, GLB, 3MF o imagen · Máx. 50 MB</small>
+          <input id="fileInput" type="file" accept=".stl,.obj,.fbx,.glb,.gltf,.3mf,image/*" />
+          <span class="upload-icon">↥</span><b>Arrastra tu archivo aquí</b><small>GLB, glTF, FBX, OBJ, STL, 3MF o imagen · Máx. 50 MB</small>
         </label>
         <div class="upload-preview" id="uploadPreview"><img id="uploadThumb" alt="Referencia cargada"/><div><b id="uploadName">Referencia</b><small>Se aplicará como relieve sobre la pieza</small></div><button id="removeImage" type="button" aria-label="Quitar imagen">×</button></div>
         <div class="creation-modes" id="creationModes">
@@ -127,6 +127,7 @@
     </aside>
   </main>
   <script src="./app.js"></script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
   <script type="module" src="./relief3d.js"></script>
 </body>
 </html>
