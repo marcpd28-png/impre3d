@@ -1,5 +1,5 @@
 const $=(s,p=document)=>p.querySelector(s), $$=(s,p=document)=>[...p.querySelectorAll(s)];
-const state={step:1,price:42.9,material:'PLA',color:'#f05a28',rotation:{x:-14,y:32},zoom:1,pendingImage:null,imageName:null};
+const state={step:1,price:42.9,material:'PLA',color:'#f05a28',rotation:{x:-14,y:32},zoom:1,pendingImage:null,imageName:null,mode:'relief'};
 const scene=$('#scene'), model=$('#model'), machine=$('.machine');
 
 function showStep(n){
@@ -12,12 +12,13 @@ $('#prompt').addEventListener('input',e=>{$('#counter').textContent=`${e.target.
 $('#generateBtn').addEventListener('click',()=>{
   const btn=$('#generateBtn'), prompt=$('#prompt').value.trim();
   if(!prompt && !state.pendingImage){$('#prompt').focus();$('#prompt').placeholder='Describe una pieza o sube una imagen primero';return}
+  if(state.mode==='figure'){alert('La figura 360° necesita conectar un motor externo de reconstrucción 3D. Elige Relieve, Litofanía o Placa para generar ahora.');return}
   btn.disabled=true; btn.firstChild.textContent='GENERANDO '; $('#statusText').textContent='M1 / PREPARANDO CÁMARA'; $('#nozzleTemp').textContent='220°C'; $('#bedTemp').textContent='60°C'; $('#chamberTemp').textContent='34°C'; machine.classList.add('printing');
   if(prompt){const words=prompt.split(/\s+/); $('#orderName').textContent=words.slice(0,5).join(' '); $('#modelText').textContent=(words.find(w=>w.length>2)||'M')[0].toUpperCase()}
   setTimeout(()=>{
     if(state.pendingImage){
       $('#imageRelief').style.backgroundImage=`url("${state.pendingImage}")`; model.classList.add('image-mode');
-      window.dispatchEvent(new CustomEvent('impre3d-generate-relief',{detail:{url:state.pendingImage,color:state.color}}));
+      window.dispatchEvent(new CustomEvent('impre3d-generate-relief',{detail:{url:state.pendingImage,color:state.color,mode:state.mode}}));
       state.rotation={x:-5,y:18};state.zoom=1.22;renderModel();
       $('#orderName').textContent=(state.imageName||'Modelo desde imagen').replace(/\.[^.]+$/,'');
       $('#viabilityTitle').textContent='Vista 3D generada';$('#viabilityDetail').textContent='Pendiente de convertir a malla imprimible';
@@ -40,6 +41,8 @@ $('#fileInput').addEventListener('change',e=>applyReference(e.target.files[0]));
 ['dragenter','dragover'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.add('drag')}));
 ['dragleave','drop'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.remove('drag');if(ev==='drop'&&e.dataTransfer.files[0])applyReference(e.dataTransfer.files[0])}));
 $('#removeImage').addEventListener('click',()=>{$('#fileInput').value='';state.pendingImage=null;state.imageName=null;$('#uploadPreview').classList.remove('visible');$('#dropzone').classList.remove('has-image');$('#imageRelief').style.backgroundImage='';model.classList.remove('image-mode');$('#prompt').value='';$('#counter').textContent='0 / 240';$('#statusText').textContent='M1 LISTA'});
+const modeInfo={relief:['Relieve 3D local','La imagen se convierte en una malla de profundidad dentro del navegador.'],lithophane:['Litofanía iluminada','Los tonos claros y oscuros controlan el espesor para revelar la imagen con luz.'],plaque:['Placa personalizada','La imagen se monta sobre una base sólida con espesor imprimible.'],figure:['Figura completa 360°','Necesita un motor IA externo para inferir espalda, laterales y geometría faltante.']};
+$$('[data-mode]').forEach(b=>b.addEventListener('click',()=>{$$('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.mode=b.dataset.mode;const m=modeInfo[state.mode];$('#pipelineNote').innerHTML=`<i>${state.mode==='figure'?'API':'✓'}</i><span><b>${m[0]}</b><small>${m[1]}</small></span>`;$('#generateBtn').classList.toggle('needs-api',state.mode==='figure')}));
 
 function updateQuote(){
   const w=+$('#width').value||120,h=+$('#height').value||80,d=+$('#depth').value||45, finish=+$('#finish').value;

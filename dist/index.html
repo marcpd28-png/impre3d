@@ -71,7 +71,17 @@
           <span class="upload-icon">↥</span><b>Arrastra tu archivo aquí</b><small>STL, OBJ, GLB, 3MF o imagen · Máx. 50 MB</small>
         </label>
         <div class="upload-preview" id="uploadPreview"><img id="uploadThumb" alt="Referencia cargada"/><div><b id="uploadName">Referencia</b><small>Se aplicará como relieve sobre la pieza</small></div><button id="removeImage" type="button" aria-label="Quitar imagen">×</button></div>
-        <button class="primary" id="generateBtn">GENERAR MODELO <span>→</span></button>
+        <div class="creation-modes" id="creationModes">
+          <span>¿QUÉ QUIERES CREAR?</span>
+          <div class="mode-grid">
+            <button class="active" data-mode="relief"><b>Relieve 3D</b><small>Generación inmediata</small></button>
+            <button data-mode="lithophane"><b>Litofanía</b><small>Visible con luz</small></button>
+            <button data-mode="plaque"><b>Placa</b><small>Imagen + base sólida</small></button>
+            <button data-mode="figure"><b>Figura 360°</b><small>Requiere motor IA</small></button>
+          </div>
+        </div>
+        <div class="pipeline-note" id="pipelineNote"><i>01</i><span><b>Relieve 3D local</b><small>La imagen se convierte en una malla de profundidad dentro del navegador.</small></span></div>
+        <button class="primary" id="generateBtn">GENERAR MODELO 3D <span>→</span></button>
         <p class="fine">La generación de esta demo es una simulación visual.</p>
       </section>
 
