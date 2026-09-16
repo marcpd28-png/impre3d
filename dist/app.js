@@ -16,9 +16,19 @@ $('#generateBtn').addEventListener('click',()=>{
   setTimeout(()=>{$('#statusText').textContent='M1 / MODELO LISTO';btn.disabled=false;btn.firstChild.textContent='GENERAR MODELO ';machine.classList.remove('printing');showStep(2)},2850);
 });
 
-$('#fileInput').addEventListener('change',e=>{if(e.target.files[0]){$('#prompt').value=`Archivo: ${e.target.files[0].name}`;$('#counter').textContent=`${$('#prompt').value.length} / 240`}});
+function applyReference(file){
+  if(!file)return;
+  $('#prompt').value=`Crear una pieza 3D usando ${file.name} como relieve frontal`;
+  $('#counter').textContent=`${$('#prompt').value.length} / 240`;
+  $('#uploadName').textContent=file.name; $('#uploadPreview').classList.add('visible'); $('#dropzone').classList.add('has-image');
+  if(file.type.startsWith('image/')){
+    const reader=new FileReader(); reader.onload=()=>{const url=reader.result;$('#uploadThumb').src=url;$('#imageRelief').style.backgroundImage=`url("${url}")`;model.classList.add('image-mode');$('#statusText').textContent='M1 / TEXTURA CARGADA'}; reader.readAsDataURL(file);
+  } else { $('#uploadThumb').removeAttribute('src'); $('#modelText').textContent='3D'; model.classList.remove('image-mode'); }
+}
+$('#fileInput').addEventListener('change',e=>applyReference(e.target.files[0]));
 ['dragenter','dragover'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.add('drag')}));
-['dragleave','drop'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.remove('drag');if(ev==='drop'&&e.dataTransfer.files[0]){$('#prompt').value=`Archivo: ${e.dataTransfer.files[0].name}`}}));
+['dragleave','drop'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.remove('drag');if(ev==='drop'&&e.dataTransfer.files[0])applyReference(e.dataTransfer.files[0])}));
+$('#removeImage').addEventListener('click',()=>{$('#fileInput').value='';$('#uploadPreview').classList.remove('visible');$('#dropzone').classList.remove('has-image');$('#imageRelief').style.backgroundImage='';model.classList.remove('image-mode');$('#prompt').value='';$('#counter').textContent='0 / 240';$('#statusText').textContent='M1 LISTA'});
 
 function updateQuote(){
   const w=+$('#width').value||120,h=+$('#height').value||80,d=+$('#depth').value||45, finish=+$('#finish').value;

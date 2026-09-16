@@ -40,7 +40,7 @@
       <div class="scene" id="scene" role="img" aria-label="Modelo 3D interactivo">
         <div class="model-wrap" id="modelWrap">
           <div class="model" id="model">
-            <div class="face front"><span id="modelText">M</span></div><div class="face back"></div>
+            <div class="face front" id="modelFront"><div class="image-relief" id="imageRelief"></div><span id="modelText">M</span></div><div class="face back" id="modelBack"></div>
             <div class="face right"></div><div class="face left"></div><div class="face top"></div><div class="face bottom"></div>
           </div>
           <div class="measure measure-w"><span id="widthLabel">120 mm</span></div>
@@ -69,6 +69,7 @@
           <input id="fileInput" type="file" accept=".stl,.obj,.glb,.gltf,.3mf,image/*" />
           <span class="upload-icon">↥</span><b>Arrastra tu archivo aquí</b><small>STL, OBJ, GLB, 3MF o imagen · Máx. 50 MB</small>
         </label>
+        <div class="upload-preview" id="uploadPreview"><img id="uploadThumb" alt="Referencia cargada"/><div><b id="uploadName">Referencia</b><small>Se aplicará como relieve sobre la pieza</small></div><button id="removeImage" type="button" aria-label="Quitar imagen">×</button></div>
         <button class="primary" id="generateBtn">GENERAR MODELO <span>→</span></button>
         <p class="fine">La generación de esta demo es una simulación visual.</p>
       </section>
