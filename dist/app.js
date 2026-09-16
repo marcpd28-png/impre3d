@@ -17,6 +17,7 @@ $('#generateBtn').addEventListener('click',()=>{
   setTimeout(()=>{
     if(state.pendingImage){
       $('#imageRelief').style.backgroundImage=`url("${state.pendingImage}")`; model.classList.add('image-mode');
+      window.dispatchEvent(new CustomEvent('impre3d-generate-relief',{detail:{url:state.pendingImage,color:state.color}}));
       state.rotation={x:-5,y:18};state.zoom=1.22;renderModel();
       $('#orderName').textContent=(state.imageName||'Modelo desde imagen').replace(/\.[^.]+$/,'');
       $('#viabilityTitle').textContent='Vista 3D generada';$('#viabilityDetail').textContent='Pendiente de convertir a malla imprimible';
@@ -50,7 +51,7 @@ function updateQuote(){
 }
 $$('.dimensions input').forEach(i=>i.addEventListener('input',updateQuote)); $('#finish').addEventListener('input',updateQuote);
 $$('[data-material]').forEach(b=>b.addEventListener('click',()=>{$$('[data-material]').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.material=b.dataset.material;updateQuote()}));
-$$('[data-color]').forEach(b=>b.addEventListener('click',()=>{$$('[data-color]').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.color=b.dataset.color;document.documentElement.style.setProperty('--orange',state.color)}));
+$$('[data-color]').forEach(b=>b.addEventListener('click',()=>{$$('[data-color]').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.color=b.dataset.color;document.documentElement.style.setProperty('--orange',state.color);window.dispatchEvent(new CustomEvent('impre3d-relief-color',{detail:{color:state.color}}))}));
 $('#checkoutBtn').addEventListener('click',()=>showStep(3)); $$('[data-back]').forEach(b=>b.addEventListener('click',()=>showStep(+b.dataset.back)));
 $('#confirmBtn').addEventListener('click',()=>{machine.classList.add('printing');$('#statusText').textContent='M1 / TRABAJO PROGRAMADO';setTimeout(()=>{machine.classList.remove('printing');showStep(4)},1400)});
 $('#restartBtn').addEventListener('click',()=>{showStep(1);$('#prompt').value='';$('#counter').textContent='0 / 240';$('#statusText').textContent='M1 LISTA';$('#nozzleTemp').textContent='24°C';$('#bedTemp').textContent='23°C';$('#chamberTemp').textContent='28°C'});
