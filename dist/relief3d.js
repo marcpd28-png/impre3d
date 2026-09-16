@@ -8,6 +8,7 @@ import { ThreeMFLoader } from 'three/addons/loaders/3MFLoader.js';
 const host=document.getElementById('webglViewport');
 const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(390,300);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;host.appendChild(renderer.domElement);
+window.dispatchEvent(new Event('impre3d-engine-ready'));
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(32,390/300,.1,100);camera.position.set(0,1.2,7.2);
 scene.add(new THREE.HemisphereLight(0xdff5ff,0x15100e,2.2));
