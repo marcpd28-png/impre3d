@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./m1-v13.css" />
+  <link rel="stylesheet" href="./m1-v15.css" />
 </head>
 <body>
   <header class="topbar">
@@ -83,6 +83,7 @@
         </div>
         <div class="pipeline-note" id="pipelineNote"><i>01</i><span><b>Relieve 3D local</b><small>La imagen se convierte en una malla de profundidad dentro del navegador.</small></span></div>
         <div class="model-progress" id="modelProgress"><div><span id="progressPhase">LEYENDO ARCHIVO</span><b id="progressValue">0%</b></div><i><em id="progressBar"></em></i></div>
+        <div class="fallback-card" id="fallbackCard"><div class="fallback-file"><span id="fallbackExt">3D</span><div><b id="fallbackName">Modelo 3D</b><small id="fallbackMeta">Archivo listo</small></div></div><p>Tu navegador no puede mostrar el visor 3D, pero puedes configurar medidas, material y solicitar una revisión técnica.</p><button id="continueFallback" type="button">CONTINUAR SIN VISTA 3D →</button></div>
         <button class="primary" id="generateBtn">GENERAR MODELO 3D <span>→</span></button>
         <p class="fine">La generación de esta demo es una simulación visual.</p>
       </section>
@@ -128,7 +129,7 @@
       </section>
     </aside>
   </main>
-  <script src="./app-v12.js"></script>
-  <script type="module" src="./relief3d-v14.bundle.js"></script>
+  <script src="./app-v15.js"></script>
+  <script type="module" src="./relief3d-v15.bundle.js"></script>
 </body>
 </html>
