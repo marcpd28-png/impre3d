@@ -1,5 +1,5 @@
 const $=(s,p=document)=>p.querySelector(s), $$=(s,p=document)=>[...p.querySelectorAll(s)];
-const state={step:1,price:42.9,material:'PLA',color:'#f05a28',rotation:{x:-14,y:32},zoom:1,pendingImage:null,pendingModel:null,imageName:null,modelExt:null,modelLoaded:false,mode:'relief'};
+const state={step:1,price:42.9,material:'PLA',color:'#f05a28',rotation:{x:-14,y:32},zoom:1,pendingImage:null,pendingModel:null,pendingFile:null,imageName:null,modelExt:null,modelLoaded:false,mode:'relief'};
 const scene=$('#scene'), model=$('#model'), machine=$('.machine');
 
 function showStep(n){
@@ -18,7 +18,7 @@ $('#generateBtn').addEventListener('click',()=>{
   if(prompt){const words=prompt.split(/\s+/); $('#orderName').textContent=words.slice(0,5).join(' '); $('#modelText').textContent=(words.find(w=>w.length>2)||'M')[0].toUpperCase()}
   setTimeout(()=>{
     if(state.pendingModel){
-      window.dispatchEvent(new CustomEvent('impre3d-load-model',{detail:{url:state.pendingModel,ext:state.modelExt,name:state.imageName}}));
+      window.dispatchEvent(new CustomEvent('impre3d-load-model',{detail:{file:state.pendingFile,ext:state.modelExt,name:state.imageName}}));
       $('#viabilityTitle').textContent='Modelo 3D cargado';$('#viabilityDetail').textContent='Analizando geometría y dimensiones';
       $('#statusText').textContent='M1 / MODELO 3D CARGADO';
     } else if(state.pendingImage){
@@ -44,23 +44,24 @@ function applyReference(file){
     const reader=new FileReader(); reader.onload=()=>{const url=reader.result;state.pendingImage=url;state.imageName=file.name;$('#uploadThumb').src=url;model.classList.remove('image-mode');$('#statusText').textContent='M1 / IMAGEN LISTA PARA GENERAR'}; reader.readAsDataURL(file);
   } else {
     if(!['glb','gltf','fbx','obj','stl','3mf'].includes(ext)){alert('Formato no compatible. Usa GLB, glTF, FBX, OBJ, STL o 3MF.');return}
-    if(state.pendingModel)URL.revokeObjectURL(state.pendingModel);state.pendingImage=null;state.pendingModel=URL.createObjectURL(file);state.modelExt=ext;state.imageName=file.name;state.modelLoaded=false;
+    if(state.pendingModel)URL.revokeObjectURL(state.pendingModel);state.pendingImage=null;state.pendingModel=URL.createObjectURL(file);state.pendingFile=file;state.modelExt=ext;state.imageName=file.name;state.modelLoaded=false;
     $('#prompt').value=`Modelo 3D original: ${file.name}`;$('#counter').textContent=`${$('#prompt').value.length} / 240`;
     $('#uploadThumb').removeAttribute('src');$('#uploadThumb').alt='Archivo 3D';$('#modelText').textContent='3D';model.classList.remove('image-mode');$('#creationModes').style.display='none';
     $('#pipelineNote').innerHTML=`<i>•••</i><span><b>Cargando ${ext.toUpperCase()}</b><small>Leyendo geometría, materiales y texturas…</small></span>`;
     $('#uploadPreview small').textContent=`Formato ${ext.toUpperCase()} · Geometría 3D original`;$('#statusText').textContent=`M1 / CARGANDO ${ext.toUpperCase()} 0%`;$('#generateBtn').firstChild.textContent='CARGANDO MODELO ';$('#generateBtn').disabled=true;
-    window.dispatchEvent(new CustomEvent('impre3d-load-model',{detail:{url:state.pendingModel,ext:state.modelExt,name:state.imageName}}));
+    $('#modelProgress').classList.add('visible');$('#progressBar').style.width='0%';$('#progressValue').textContent='0%';
+    window.dispatchEvent(new CustomEvent('impre3d-load-model',{detail:{file,ext:state.modelExt,name:state.imageName}}));
   }
 }
 $('#fileInput').addEventListener('change',e=>applyReference(e.target.files[0]));
 ['dragenter','dragover'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.add('drag')}));
 ['dragleave','drop'].forEach(ev=>$('#dropzone').addEventListener(ev,e=>{e.preventDefault();e.currentTarget.classList.remove('drag');if(ev==='drop'&&e.dataTransfer.files[0])applyReference(e.dataTransfer.files[0])}));
-$('#removeImage').addEventListener('click',()=>{$('#fileInput').value='';if(state.pendingModel)URL.revokeObjectURL(state.pendingModel);state.pendingImage=null;state.pendingModel=null;state.modelExt=null;state.imageName=null;$('#uploadPreview').classList.remove('visible');$('#dropzone').classList.remove('has-image');$('#creationModes').style.display='';$('#uploadPreview small').textContent='Se aplicará como relieve sobre la pieza';$('#imageRelief').style.backgroundImage='';model.classList.remove('image-mode');window.dispatchEvent(new Event('impre3d-clear-model'));$('#prompt').value='';$('#counter').textContent='0 / 240';$('#statusText').textContent='M1 LISTA'});
+$('#removeImage').addEventListener('click',()=>{$('#fileInput').value='';if(state.pendingModel)URL.revokeObjectURL(state.pendingModel);state.pendingImage=null;state.pendingModel=null;state.pendingFile=null;state.modelExt=null;state.imageName=null;$('#uploadPreview').classList.remove('visible');$('#modelProgress').classList.remove('visible');$('#dropzone').classList.remove('has-image');$('#creationModes').style.display='';$('#uploadPreview small').textContent='Se aplicará como relieve sobre la pieza';$('#imageRelief').style.backgroundImage='';model.classList.remove('image-mode');window.dispatchEvent(new Event('impre3d-clear-model'));$('#prompt').value='';$('#counter').textContent='0 / 240';$('#statusText').textContent='M1 LISTA'});
 const modeInfo={relief:['Relieve 3D local','La imagen se convierte en una malla de profundidad dentro del navegador.'],lithophane:['Litofanía iluminada','Los tonos claros y oscuros controlan el espesor para revelar la imagen con luz.'],plaque:['Placa personalizada','La imagen se monta sobre una base sólida con espesor imprimible.'],figure:['Figura completa 360°','Necesita un motor IA externo para inferir espalda, laterales y geometría faltante.']};
 $$('[data-mode]').forEach(b=>b.addEventListener('click',()=>{$$('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.mode=b.dataset.mode;const m=modeInfo[state.mode];$('#pipelineNote').innerHTML=`<i>${state.mode==='figure'?'API':'✓'}</i><span><b>${m[0]}</b><small>${m[1]}</small></span>`;$('#generateBtn').classList.toggle('needs-api',state.mode==='figure')}));
-window.addEventListener('impre3d-model-loaded',e=>{state.modelLoaded=true;const d=e.detail;$('#statusText').textContent=`M1 / ${d.ext.toUpperCase()} VISIBLE`;$('#pipelineNote').innerHTML=`<i>✓</i><span><b>Modelo 3D visible</b><small>${d.meshes} piezas · ${d.triangles.toLocaleString('es-PE')} triángulos · materiales conservados</small></span>`;$('#generateBtn').firstChild.textContent='CONFIGURAR MODELO ';$('#generateBtn').disabled=false});
+window.addEventListener('impre3d-model-loaded',e=>{state.modelLoaded=true;const d=e.detail;$('#progressBar').style.width='100%';$('#progressValue').textContent='100%';$('#progressPhase').textContent='MODELO CONSTRUIDO';$('#modelProgress').classList.add('done');$('#statusText').textContent=`M1 / ${d.ext.toUpperCase()} VISIBLE`;$('#pipelineNote').innerHTML=`<i>✓</i><span><b>Modelo 3D visible</b><small>${d.meshes} piezas · ${d.triangles.toLocaleString('es-PE')} triángulos · materiales conservados</small></span>`;$('#generateBtn').firstChild.textContent='CONFIGURAR MODELO ';$('#generateBtn').disabled=false});
 window.addEventListener('impre3d-model-error',e=>{$('#statusText').textContent='M1 / ERROR DE ARCHIVO';$('#pipelineNote').innerHTML=`<i>!</i><span><b>No se pudo abrir el modelo</b><small>${e.detail.message}</small></span>`;$('#generateBtn').firstChild.textContent='REINTENTAR '});
-window.addEventListener('impre3d-model-progress',e=>{const p=e.detail.percent;$('#statusText').textContent=`M1 / CARGANDO ${state.modelExt.toUpperCase()} ${p}%`;$('#pipelineNote').innerHTML=`<i>${p}</i><span><b>Cargando ${state.modelExt.toUpperCase()}</b><small>${e.detail.loaded} MB leídos · espera a que aparezca el modelo</small></span>`});
+window.addEventListener('impre3d-model-progress',e=>{const p=e.detail.percent;$('#progressBar').style.width=`${p}%`;$('#progressValue').textContent=`${p}%`;$('#progressPhase').textContent=p<90?'LEYENDO ARCHIVO':'CONSTRUYENDO ESCENA 3D';$('#statusText').textContent=`M1 / CARGANDO ${state.modelExt.toUpperCase()} ${p}%`;$('#pipelineNote').innerHTML=`<i>${p}</i><span><b>Cargando ${state.modelExt.toUpperCase()}</b><small>${e.detail.loaded} MB leídos · espera a que aparezca el modelo</small></span>`});
 
 function updateQuote(){
   const w=+$('#width').value||120,h=+$('#height').value||80,d=+$('#depth').value||45, finish=+$('#finish').value;

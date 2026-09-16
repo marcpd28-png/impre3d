@@ -20,13 +20,11 @@ function normalizeModel(object,ext='3d'){
  disposeGroup();group=new THREE.Group();group.add(object);const box=new THREE.Box3().setFromObject(object),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());object.position.sub(center);const max=Math.max(size.x,size.y,size.z)||1;object.scale.setScalar(3.5/max);object.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(!o.material)o.material=new THREE.MeshStandardMaterial({color:0xf05a28,roughness:.55})}});targetRot={x:-.16,y:.42};group.rotation.set(targetRot.x,targetRot.y,0);scene.add(group);host.classList.add('active');camera.position.z=7.2;
  let meshes=0,triangles=0;object.traverse(o=>{if(o.isMesh&&o.geometry){meshes++;const g=o.geometry;triangles+=g.index?g.index.count/3:(g.attributes.position?.count||0)/3}});window.dispatchEvent(new CustomEvent('impre3d-model-loaded',{detail:{ext,meshes,triangles:Math.round(triangles)}}));
 }
-function loadExternal({url,ext}){
- const done=o=>normalizeModel(o.scene||o,ext),fail=e=>{console.error(e);window.dispatchEvent(new CustomEvent('impre3d-model-error',{detail:{message:`El ${ext.toUpperCase()} está incompleto, dañado o usa recursos externos faltantes.`}}))},progress=e=>{const percent=e.total?Math.min(99,Math.round(e.loaded/e.total*100)):Math.min(95,Math.round(e.loaded/120000));window.dispatchEvent(new CustomEvent('impre3d-model-progress',{detail:{percent,loaded:(e.loaded/1048576).toFixed(1)}}))};
- if(ext==='glb'||ext==='gltf')new GLTFLoader().load(url,done,progress,fail);
- else if(ext==='fbx')new FBXLoader().load(url,done,progress,fail);
- else if(ext==='obj')new OBJLoader().load(url,done,progress,fail);
- else if(ext==='stl')new STLLoader().load(url,g=>done(new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xf05a28,roughness:.5,metalness:.05}))),progress,fail);
- else if(ext==='3mf')new ThreeMFLoader().load(url,done,progress,fail);
+function loadExternal({file,ext}){
+ const done=o=>normalizeModel(o.scene||o,ext),fail=e=>{console.error(e);window.dispatchEvent(new CustomEvent('impre3d-model-error',{detail:{message:`El ${ext.toUpperCase()} está incompleto, dañado o usa recursos externos faltantes.`}}))};
+ const reader=new FileReader();reader.onprogress=e=>{const percent=e.lengthComputable?Math.min(88,Math.round(e.loaded/e.total*88)):40;window.dispatchEvent(new CustomEvent('impre3d-model-progress',{detail:{percent,loaded:(e.loaded/1048576).toFixed(1)}}))};
+ reader.onerror=fail;reader.onload=()=>{window.dispatchEvent(new CustomEvent('impre3d-model-progress',{detail:{percent:92,loaded:(file.size/1048576).toFixed(1)}}));try{const data=reader.result;if(ext==='glb'||ext==='gltf')new GLTFLoader().parse(data,'',done,fail);else if(ext==='fbx')done(new FBXLoader().parse(data,''));else if(ext==='obj')done(new OBJLoader().parse(data));else if(ext==='stl')done(new THREE.Mesh(new STLLoader().parse(data),new THREE.MeshStandardMaterial({color:0xf05a28,roughness:.5,metalness:.05})));else if(ext==='3mf')done(new ThreeMFLoader().parse(data))}catch(error){fail(error)}};
+ if(ext==='obj'||ext==='gltf')reader.readAsText(file);else reader.readAsArrayBuffer(file);
 }
 
 function build(url,mode='relief'){
