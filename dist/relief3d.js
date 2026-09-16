@@ -16,11 +16,12 @@ const rim=new THREE.DirectionalLight(0xff5a28,5);rim.position.set(4,1,-3);scene.
 let group=null,frontMaterial=null,drag=false,last={x:0,y:0},targetRot={x:-.12,y:.32};
 
 function disposeGroup(){if(!group)return;scene.remove(group);group.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose()});group=null}
-function normalizeModel(object){
+function normalizeModel(object,ext='3d'){
  disposeGroup();group=new THREE.Group();group.add(object);const box=new THREE.Box3().setFromObject(object),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());object.position.sub(center);const max=Math.max(size.x,size.y,size.z)||1;object.scale.setScalar(3.5/max);object.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;if(!o.material)o.material=new THREE.MeshStandardMaterial({color:0xf05a28,roughness:.55})}});targetRot={x:-.16,y:.42};group.rotation.set(targetRot.x,targetRot.y,0);scene.add(group);host.classList.add('active');camera.position.z=7.2;
+ let meshes=0,triangles=0;object.traverse(o=>{if(o.isMesh&&o.geometry){meshes++;const g=o.geometry;triangles+=g.index?g.index.count/3:(g.attributes.position?.count||0)/3}});window.dispatchEvent(new CustomEvent('impre3d-model-loaded',{detail:{ext,meshes,triangles:Math.round(triangles)}}));
 }
 function loadExternal({url,ext}){
- const done=o=>normalizeModel(o.scene||o),fail=e=>{console.error(e);alert(`No se pudo leer el archivo ${ext.toUpperCase()}. Verifica que esté completo y no esté dañado.`)};
+ const done=o=>normalizeModel(o.scene||o,ext),fail=e=>{console.error(e);window.dispatchEvent(new CustomEvent('impre3d-model-error',{detail:{message:`El ${ext.toUpperCase()} está incompleto, dañado o usa recursos externos faltantes.`}}))};
  if(ext==='glb'||ext==='gltf')new GLTFLoader().load(url,done,undefined,fail);
  else if(ext==='fbx')new FBXLoader().load(url,done,undefined,fail);
  else if(ext==='obj')new OBJLoader().load(url,done,undefined,fail);

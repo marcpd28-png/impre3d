@@ -1,5 +1,5 @@
 const $=(s,p=document)=>p.querySelector(s), $$=(s,p=document)=>[...p.querySelectorAll(s)];
-const state={step:1,price:42.9,material:'PLA',color:'#f05a28',rotation:{x:-14,y:32},zoom:1,pendingImage:null,pendingModel:null,imageName:null,modelExt:null,mode:'relief'};
+const state={step:1,price:42.9,material:'PLA',color:'#f05a28',rotation:{x:-14,y:32},zoom:1,pendingImage:null,pendingModel:null,imageName:null,modelExt:null,modelLoaded:false,mode:'relief'};
 const scene=$('#scene'), model=$('#model'), machine=$('.machine');
 
 function showStep(n){
@@ -12,6 +12,7 @@ $('#prompt').addEventListener('input',e=>{$('#counter').textContent=`${e.target.
 $('#generateBtn').addEventListener('click',()=>{
   const btn=$('#generateBtn'), prompt=$('#prompt').value.trim();
   if(!prompt && !state.pendingImage && !state.pendingModel){$('#prompt').focus();$('#prompt').placeholder='Describe una pieza o sube una imagen o modelo 3D';return}
+  if(state.pendingModel&&state.modelLoaded){showStep(2);return}
   if(state.mode==='figure'&&!state.pendingModel){alert('La figura 360° desde una foto necesita conectar un motor externo de reconstrucción 3D. También puedes subir directamente un GLB, OBJ, STL o 3MF.');return}
   btn.disabled=true; btn.firstChild.textContent='GENERANDO '; $('#statusText').textContent='M1 / PREPARANDO CÁMARA'; $('#nozzleTemp').textContent='220°C'; $('#bedTemp').textContent='60°C'; $('#chamberTemp').textContent='34°C'; machine.classList.add('printing');
   if(prompt){const words=prompt.split(/\s+/); $('#orderName').textContent=words.slice(0,5).join(' '); $('#modelText').textContent=(words.find(w=>w.length>2)||'M')[0].toUpperCase()}
@@ -43,9 +44,12 @@ function applyReference(file){
     const reader=new FileReader(); reader.onload=()=>{const url=reader.result;state.pendingImage=url;state.imageName=file.name;$('#uploadThumb').src=url;model.classList.remove('image-mode');$('#statusText').textContent='M1 / IMAGEN LISTA PARA GENERAR'}; reader.readAsDataURL(file);
   } else {
     if(!['glb','gltf','fbx','obj','stl','3mf'].includes(ext)){alert('Formato no compatible. Usa GLB, glTF, FBX, OBJ, STL o 3MF.');return}
-    if(state.pendingModel)URL.revokeObjectURL(state.pendingModel);state.pendingImage=null;state.pendingModel=URL.createObjectURL(file);state.modelExt=ext;state.imageName=file.name;
+    if(state.pendingModel)URL.revokeObjectURL(state.pendingModel);state.pendingImage=null;state.pendingModel=URL.createObjectURL(file);state.modelExt=ext;state.imageName=file.name;state.modelLoaded=false;
+    $('#prompt').value=`Modelo 3D original: ${file.name}`;$('#counter').textContent=`${$('#prompt').value.length} / 240`;
     $('#uploadThumb').removeAttribute('src');$('#uploadThumb').alt='Archivo 3D';$('#modelText').textContent='3D';model.classList.remove('image-mode');$('#creationModes').style.display='none';
-    $('#uploadPreview small').textContent=`Formato ${ext.toUpperCase()} · Se cargará como geometría 3D real`;$('#statusText').textContent=`M1 / ${ext.toUpperCase()} LISTO PARA CARGAR`;
+    $('#pipelineNote').innerHTML=`<i>•••</i><span><b>Cargando ${ext.toUpperCase()}</b><small>Leyendo geometría, materiales y texturas…</small></span>`;
+    $('#uploadPreview small').textContent=`Formato ${ext.toUpperCase()} · Geometría 3D original`;$('#statusText').textContent=`M1 / CARGANDO ${ext.toUpperCase()}`;$('#generateBtn').firstChild.textContent='CARGANDO MODELO ';
+    window.dispatchEvent(new CustomEvent('impre3d-load-model',{detail:{url:state.pendingModel,ext:state.modelExt,name:state.imageName}}));
   }
 }
 $('#fileInput').addEventListener('change',e=>applyReference(e.target.files[0]));
@@ -54,6 +58,8 @@ $('#fileInput').addEventListener('change',e=>applyReference(e.target.files[0]));
 $('#removeImage').addEventListener('click',()=>{$('#fileInput').value='';if(state.pendingModel)URL.revokeObjectURL(state.pendingModel);state.pendingImage=null;state.pendingModel=null;state.modelExt=null;state.imageName=null;$('#uploadPreview').classList.remove('visible');$('#dropzone').classList.remove('has-image');$('#creationModes').style.display='';$('#uploadPreview small').textContent='Se aplicará como relieve sobre la pieza';$('#imageRelief').style.backgroundImage='';model.classList.remove('image-mode');window.dispatchEvent(new Event('impre3d-clear-model'));$('#prompt').value='';$('#counter').textContent='0 / 240';$('#statusText').textContent='M1 LISTA'});
 const modeInfo={relief:['Relieve 3D local','La imagen se convierte en una malla de profundidad dentro del navegador.'],lithophane:['Litofanía iluminada','Los tonos claros y oscuros controlan el espesor para revelar la imagen con luz.'],plaque:['Placa personalizada','La imagen se monta sobre una base sólida con espesor imprimible.'],figure:['Figura completa 360°','Necesita un motor IA externo para inferir espalda, laterales y geometría faltante.']};
 $$('[data-mode]').forEach(b=>b.addEventListener('click',()=>{$$('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.mode=b.dataset.mode;const m=modeInfo[state.mode];$('#pipelineNote').innerHTML=`<i>${state.mode==='figure'?'API':'✓'}</i><span><b>${m[0]}</b><small>${m[1]}</small></span>`;$('#generateBtn').classList.toggle('needs-api',state.mode==='figure')}));
+window.addEventListener('impre3d-model-loaded',e=>{state.modelLoaded=true;const d=e.detail;$('#statusText').textContent=`M1 / ${d.ext.toUpperCase()} VISIBLE`;$('#pipelineNote').innerHTML=`<i>✓</i><span><b>Modelo 3D visible</b><small>${d.meshes} piezas · ${d.triangles.toLocaleString('es-PE')} triángulos · materiales conservados</small></span>`;$('#generateBtn').firstChild.textContent='CONFIGURAR MODELO ';$('#generateBtn').disabled=false});
+window.addEventListener('impre3d-model-error',e=>{$('#statusText').textContent='M1 / ERROR DE ARCHIVO';$('#pipelineNote').innerHTML=`<i>!</i><span><b>No se pudo abrir el modelo</b><small>${e.detail.message}</small></span>`;$('#generateBtn').firstChild.textContent='REINTENTAR '});
 
 function updateQuote(){
   const w=+$('#width').value||120,h=+$('#height').value||80,d=+$('#depth').value||45, finish=+$('#finish').value;
