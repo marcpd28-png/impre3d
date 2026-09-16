@@ -48,7 +48,7 @@ function applyReference(file){
     $('#prompt').value=`Modelo 3D original: ${file.name}`;$('#counter').textContent=`${$('#prompt').value.length} / 240`;
     $('#uploadThumb').removeAttribute('src');$('#uploadThumb').alt='Archivo 3D';$('#modelText').textContent='3D';model.classList.remove('image-mode');$('#creationModes').style.display='none';
     $('#pipelineNote').innerHTML=`<i>•••</i><span><b>Cargando ${ext.toUpperCase()}</b><small>Leyendo geometría, materiales y texturas…</small></span>`;
-    $('#uploadPreview small').textContent=`Formato ${ext.toUpperCase()} · Geometría 3D original`;$('#statusText').textContent=`M1 / CARGANDO ${ext.toUpperCase()}`;$('#generateBtn').firstChild.textContent='CARGANDO MODELO ';
+    $('#uploadPreview small').textContent=`Formato ${ext.toUpperCase()} · Geometría 3D original`;$('#statusText').textContent=`M1 / CARGANDO ${ext.toUpperCase()} 0%`;$('#generateBtn').firstChild.textContent='CARGANDO MODELO ';$('#generateBtn').disabled=true;
     window.dispatchEvent(new CustomEvent('impre3d-load-model',{detail:{url:state.pendingModel,ext:state.modelExt,name:state.imageName}}));
   }
 }
@@ -60,6 +60,7 @@ const modeInfo={relief:['Relieve 3D local','La imagen se convierte en una malla 
 $$('[data-mode]').forEach(b=>b.addEventListener('click',()=>{$$('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.mode=b.dataset.mode;const m=modeInfo[state.mode];$('#pipelineNote').innerHTML=`<i>${state.mode==='figure'?'API':'✓'}</i><span><b>${m[0]}</b><small>${m[1]}</small></span>`;$('#generateBtn').classList.toggle('needs-api',state.mode==='figure')}));
 window.addEventListener('impre3d-model-loaded',e=>{state.modelLoaded=true;const d=e.detail;$('#statusText').textContent=`M1 / ${d.ext.toUpperCase()} VISIBLE`;$('#pipelineNote').innerHTML=`<i>✓</i><span><b>Modelo 3D visible</b><small>${d.meshes} piezas · ${d.triangles.toLocaleString('es-PE')} triángulos · materiales conservados</small></span>`;$('#generateBtn').firstChild.textContent='CONFIGURAR MODELO ';$('#generateBtn').disabled=false});
 window.addEventListener('impre3d-model-error',e=>{$('#statusText').textContent='M1 / ERROR DE ARCHIVO';$('#pipelineNote').innerHTML=`<i>!</i><span><b>No se pudo abrir el modelo</b><small>${e.detail.message}</small></span>`;$('#generateBtn').firstChild.textContent='REINTENTAR '});
+window.addEventListener('impre3d-model-progress',e=>{const p=e.detail.percent;$('#statusText').textContent=`M1 / CARGANDO ${state.modelExt.toUpperCase()} ${p}%`;$('#pipelineNote').innerHTML=`<i>${p}</i><span><b>Cargando ${state.modelExt.toUpperCase()}</b><small>${e.detail.loaded} MB leídos · espera a que aparezca el modelo</small></span>`});
 
 function updateQuote(){
   const w=+$('#width').value||120,h=+$('#height').value||80,d=+$('#depth').value||45, finish=+$('#finish').value;
