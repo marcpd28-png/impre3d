@@ -1,0 +1,13 @@
+{
+  "name": "impre3d",
+  "private": true,
+  "scripts": {
+    "build:3d": "esbuild dist/relief3d.js --bundle --format=esm --minify --outfile=dist/relief3d.bundle.js"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.9"
+  }
+}
