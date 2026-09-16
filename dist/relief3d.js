@@ -6,7 +6,8 @@ import { STLLoader } from 'three/addons/loaders/STLLoader.js';
 import { ThreeMFLoader } from 'three/addons/loaders/3MFLoader.js';
 
 const host=document.getElementById('webglViewport');
-const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});
+let renderer;
+try{renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'})}catch(error){host.classList.add('engine-error');host.innerHTML='<div><b>WEBGL NO DISPONIBLE</b><span>Activa la aceleración gráfica de Chrome y reinicia el navegador.</span></div>';window.dispatchEvent(new CustomEvent('impre3d-engine-error',{detail:{message:'Chrome tiene WebGL o la aceleración gráfica desactivados.'}}));throw error}
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(390,300);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;host.appendChild(renderer.domElement);
 window.dispatchEvent(new Event('impre3d-engine-ready'));
 const scene=new THREE.Scene();
