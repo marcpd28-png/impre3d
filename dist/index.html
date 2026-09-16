@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./m1.css" />
 </head>
 <body>
   <header class="topbar">
@@ -24,10 +25,18 @@
   </header>
 
   <main>
-    <section class="machine" aria-label="Vista previa de la impresora 3D">
+    <section class="machine" aria-label="Vista previa de la impresora IMPRE3D M1">
       <div class="machine-glow"></div>
-      <div class="rail rail-left"></div><div class="rail rail-right"></div>
-      <div class="gantry"><span></span><div class="print-head"><i></i><em></em></div></div>
+      <div class="enclosure">
+        <div class="top-frame"><span>IMPRE3D / M1</span><b>COREXY</b></div>
+        <div class="side-frame side-frame-left"><i></i><i></i><i></i></div>
+        <div class="side-frame side-frame-right"><i></i><i></i><i></i></div>
+        <div class="rear-panel"><div class="rear-fan"><i></i></div><span>CARBON FILTER</span></div>
+        <div class="chamber-light chamber-light-left"></div><div class="chamber-light chamber-light-right"></div>
+        <div class="door-reflection"></div>
+      </div>
+      <div class="rail rail-left"><span></span></div><div class="rail rail-right"><span></span></div>
+      <div class="gantry"><div class="belt belt-top"></div><div class="belt belt-bottom"></div><span></span><div class="print-head"><div class="head-logo">M1</div><div class="head-fan"></div><div class="sensor">LIDAR</div><i></i><em></em></div></div>
       <div class="scene" id="scene" role="img" aria-label="Modelo 3D interactivo">
         <div class="model-wrap" id="modelWrap">
           <div class="model" id="model">
@@ -38,10 +47,12 @@
           <div class="measure measure-h"><span id="heightLabel">80 mm</span></div>
         </div>
         <div class="print-line" id="printLine"></div>
-        <div class="bed"><div class="bed-grid"></div><span>IMPRE3D / BUILD PLATE</span></div>
+        <div class="bed"><div class="bed-grid"><i></i></div><span>IMPRE3D / FLEX PEI / 256 × 256</span><b>HOT SURFACE</b></div>
       </div>
-      <div class="camera-hint">ARRASTRA PARA ROTAR · SCROLL PARA ACERCAR</div>
-      <div class="status-chip"><i></i><span id="statusText">SISTEMA LISTO</span></div>
+      <div class="printer-console"><span class="console-brand">M1</span><div><small>CHAMBER</small><b id="chamberTemp">28°C</b></div><div><small>NOZZLE</small><b id="nozzleTemp">24°C</b></div><div><small>BED</small><b id="bedTemp">23°C</b></div></div>
+      <div class="machine-caption"><b>IMPRE3D M1</b><span>COREXY · 256³ MM · CÁMARA CERRADA</span></div>
+      <div class="camera-hint">ARRASTRA PARA ORBITAR · SCROLL PARA ACERCAR</div>
+      <div class="status-chip"><i></i><span id="statusText">M1 LISTA</span></div>
     </section>
 
     <aside class="panel">
